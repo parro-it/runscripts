@@ -17,20 +17,8 @@ function buildScriptSource(scriptName, scripts) {
   const script = scripts[scriptName];
   const post = scripts['post' + scriptName] || '';
 
-  const foundScripts = [];
-
-  if (pre) {
-    foundScripts.push('{ ' + pre + ' }');
-  }
-
-  foundScripts.push('{ ' + script + ' }');
-
-  if (post) {
-    foundScripts.push('{ ' + post + ' }');
-  }
-
-  const source = foundScripts.join(' && ');
-  console.log('source', source);
+  const foundScripts = [pre, script, post].filter(s => !!s);
+  const source = foundScripts.join('; ');
   return source;
 }
 
