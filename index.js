@@ -30,6 +30,7 @@ function buildScriptSource(scriptName, scripts) {
   }
 
   const source = foundScripts.join(' && ');
+  console.log('source', source);
 }
 
 function * getScriptsObject(scriptName, options) {
@@ -55,7 +56,7 @@ function * getScriptSource(scriptName, options) {
 }
 
 function * runScripts(scriptName, options) {
-  options.spawn = options.spawn || {shell: '/usr/bin/bash'};
+  options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
 
   yield injectPkgJsonContent(options);
