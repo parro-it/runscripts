@@ -20,6 +20,10 @@ test('run scripts from pkg.json', t => co(function * () {
   t.end();
 }).catch(err => t.end(err)));
 
+test('run pre and post scripts if presents', t => co(function * () {
+  t.equal(yield check('simple', 'check-prepost'), '1\n2\n3\n');
+  t.end();
+}).catch(err => t.end(err)));
 
 test('throws when script not found', t => co(function * () {
   check('simple', 'non-existant')
@@ -29,7 +33,6 @@ test('throws when script not found', t => co(function * () {
     });
 
 }));
-
 
 test('throws when pkg.json not found', t => co(function * () {
   check('../../../non-existant', 'script-name')

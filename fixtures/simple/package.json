@@ -1,5 +1,8 @@
 {
   "scripts": {
-    "test1": "echo ciao"
+    "test1": "echo ciao",
+    "check-prepost": "echo 2",
+    "precheck-prepost": "echo 1",
+    "postcheck-prepost": "echo 3"
   }
 }

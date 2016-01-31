@@ -18,11 +18,24 @@ function * findScript(scriptName, options) {
   if (! scripts.hasOwnProperty(scriptName)) {
     error('ENOSCRIPT', `Script not found: ${scriptName}`);
   }
-  return scripts[scriptName];
+
+  const pre = scripts['pre' + scriptName] || '';
+  const script = scripts[scriptName];
+  const post = scripts['post' + scriptName] || '';
+  const foundScripts = [];
+  if (pre) {
+    foundScripts.push('{ ' + pre + ' }');
+  }
+  foundScripts.push('{ ' + script + ' }');
+  if (post) {
+    foundScripts.push('{ ' + post + ' }');
+  }
+  return foundScripts.join(' && ');
 
 }
 
 function * runScripts(scriptName, options) {
+
   return spawn(yield findScript(scriptName, options), options.spawn);
 }
 
