@@ -24,9 +24,15 @@
     "eslint": "^1.10.3",
     "eslint-config-js": "^2.0.2",
     "faucet": "0.0.1",
+    "stream-string": "^1.0.2",
     "tape": "^4.2.2"
   },
   "files": [
     "index.js"
-  ]
+  ],
+  "dependencies": {
+    "co": "^4.6.0",
+    "pkg-conf": "^1.1.1",
+    "spawn-shell": "^1.0.1"
+  }
 }
