@@ -29,7 +29,8 @@ function buildScriptSource(scriptName, scripts) {
     foundScripts.push('{ ' + post + ' }');
   }
 
-  return foundScripts.join(' && ');
+  const source = foundScripts.join(' && ');
+  console.log(source);
 }
 
 function * getScriptsObject(scriptName, options) {
