@@ -1,5 +1,9 @@
 {
+  "engine": {
+    "node":"4.0"
+  },
   "scripts": {
+    "test-pkg-vars": "echo ${npm_package_engine_node}",
     "test1": "echo ciao",
     "check-prepost": "echo 2",
     "precheck-prepost": "echo 1",

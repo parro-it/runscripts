@@ -25,6 +25,13 @@ test('run pre and post scripts if presents', t => co(function * () {
   t.end();
 }).catch(err => t.end(err)));
 
+
+test('inject package json in env', t => co(function * () {
+  t.equal(yield check('simple', 'test-pkg-vars'), '4.0\n');
+  t.end();
+}).catch(err => t.end(err)));
+
+
 test('throws when script not found', t => co(function * () {
   check('simple', 'non-existant')
     .catch(err => {
