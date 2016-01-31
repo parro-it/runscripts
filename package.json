@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "parro-it",
   "scripts": {
-    "test": "eslint . && node test | faucet"
+    "test": "node test"
   },
   "keywords": [],
   "engines": {
