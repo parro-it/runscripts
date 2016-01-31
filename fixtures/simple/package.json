@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test1": "echo ciao"
+  }
+}
