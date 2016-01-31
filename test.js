@@ -29,3 +29,13 @@ test('throws when script not found', t => co(function * () {
     });
 
 }));
+
+
+test('throws when pkg.json not found', t => co(function * () {
+  check('../../../non-existant', 'script-name')
+    .catch(err => {
+      t.equal(err.code, 'ENOCONFIG');
+      t.end();
+    });
+
+}));

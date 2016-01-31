@@ -10,13 +10,20 @@ function error(code, message) {
   throw err;
 }
 
-function * runScripts(scriptName, options) {
+function * findScript(scriptName, options) {
   const scripts = yield pkgConf('scripts', options.cwd);
-  if (! scripts.hasOwnProperty(scriptName)) {
-    error('ENOSCRIPT', `Script not found: ${scriptName}\n`);
+  if (pkgConf.filepath(scripts) === null) {
+    error('ENOCONFIG', `Config file not found in: ${options.cwd || process.cwd}`);
   }
-  const script = scripts[scriptName];
-  return spawn(script, options.spawn);
+  if (! scripts.hasOwnProperty(scriptName)) {
+    error('ENOSCRIPT', `Script not found: ${scriptName}`);
+  }
+  return scripts[scriptName];
+
+}
+
+function * runScripts(scriptName, options) {
+  return spawn(yield findScript(scriptName, options), options.spawn);
 }
 
 module.exports = co.wrap(runScripts);
