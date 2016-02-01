@@ -1,5 +1,4 @@
 'use strict';
-module.exports = flattenJSON;
 
 function flattenJSON(json, prefix, env) {
   if (typeof json !== 'object') {
@@ -18,3 +17,5 @@ function flattenJSON(json, prefix, env) {
 
   return env;
 }
+
+module.exports = flattenJSON;

@@ -34,10 +34,12 @@ function * getScriptsObject(scriptName, options) {
   return scripts;
 }
 
+
 function * injectPkgJsonContent(options) {
   const pkg = yield readPkgUp({cwd: options.cwd});
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 }
+
 
 function * getScriptSource(scriptName, options) {
   const scripts = yield getScriptsObject(scriptName, options);
