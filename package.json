@@ -31,9 +31,13 @@
     "modules"
   ],
   "dependencies": {
+    "babelify-require": "^0.1.0",
     "co": "^4.6.0",
+    "debug": "^2.2.0",
     "flatkeys": "^0.3.2",
+    "fs-promise": "^0.4.1",
     "pkg-conf": "^1.1.1",
+    "pkg-dir": "^1.0.0",
     "read-pkg-up": "^1.0.1",
     "spawn-shell": "^1.0.1"
   }

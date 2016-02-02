@@ -2,9 +2,15 @@
 
 const pkgConf = require('pkg-conf');
 const co = require('co');
+const debug = require('debug')('runscripts');
+const path = require('path');
+const fs = require('fs-promise');
 const spawn = require('spawn-shell');
 const readPkgUp = require('read-pkg-up');
 const flatten = require('./modules/flatten-obj');
+const pkgDir = require('pkg-dir');
+const babelifyRequire = require('babelify-require');
+
 
 function error(code, message) {
   const err = new Error(message);
@@ -13,6 +19,10 @@ function error(code, message) {
 }
 
 function buildScriptSource(scriptName, scripts) {
+  if (! scripts.hasOwnProperty(scriptName)) {
+    error('ENOSCRIPT', `Script not found: ${scriptName}`);
+  }
+
   const pre = scripts['pre' + scriptName] || '';
   const script = scripts[scriptName];
   const post = scripts['post' + scriptName] || '';
@@ -23,12 +33,24 @@ function buildScriptSource(scriptName, scripts) {
 }
 
 function * getScriptsObject(scriptName, options) {
-  const scripts = yield pkgConf('scripts', options.cwd);
-  if (pkgConf.filepath(scripts) === null) {
-    error('ENOCONFIG', `Config file not found in: ${options.cwd || process.cwd}`);
+  const cwd = options.cwd || process.cwd;
+  const root = yield pkgDir(cwd);
+  if (root) {
+    const scriptsRc = path.join(root, '.scripts.js');
+
+    if (yield fs.exists(scriptsRc)) {
+      debug(`.scripts found in ${scriptsRc}`);
+      const scripts = yield babelifyRequire(scriptsRc);
+      debug(`scripts rc => ${JSON.stringify(scripts)}`);
+      return scripts.default;
+    }
+    debug(`.scripts not found in ${scriptsRc}`);
   }
-  if (! scripts.hasOwnProperty(scriptName)) {
-    error('ENOSCRIPT', `Script not found: ${scriptName}`);
+
+  const scripts = yield pkgConf('scripts', {cwd: cwd});
+  debug(`scripts pkg object => ${JSON.stringify(scripts)}`);
+  if (pkgConf.filepath(scripts) === null) {
+    error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
   }
 
   return scripts;
@@ -39,7 +61,6 @@ function * injectPkgJsonContent(options) {
   const pkg = yield readPkgUp({cwd: options.cwd});
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 }
-
 
 function * getScriptSource(scriptName, options) {
   const scripts = yield getScriptsObject(scriptName, options);

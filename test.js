@@ -20,6 +20,13 @@ test('run scripts from pkg.json', t => co(function * () {
   t.end();
 }).catch(err => t.end(err)));
 
+
+test('use .scripts if present', t => co(function * () {
+  t.equal(yield check('scriptsrc', 'test1'), 'salve mondo\n');
+  t.end();
+}).catch(err => t.end(err)));
+
+
 test('run pre and post scripts if presents', t => co(function * () {
   t.equal(yield check('simple', 'check-prepost'), '1\n2\n3\n');
   t.end();
