@@ -32,25 +32,30 @@ function buildScriptSource(scriptName, scripts) {
   return source;
 }
 
-function * getScriptsObject(cwd) {
-  const root = yield pkgDir(cwd);
-  if (root) {
-    const scriptsRc = path.join(root, '.scripts.js');
+function * readScriptsRc(scriptsRcPath) {
+  debug(`.scripts.js found in ${scriptsRcPath}`);
+  const scripts = yield babelifyRequire(scriptsRcPath);
+  debug(`.scripts.js content => ${JSON.stringify(scripts.default)}`);
+  return scripts.default;
+}
 
-    if (yield fs.exists(scriptsRc)) {
-      debug(`.scripts found in ${scriptsRc}`);
-      const scripts = yield babelifyRequire(scriptsRc);
-      debug(`scripts rc => ${JSON.stringify(scripts)}`);
-      return scripts.default;
-    }
-    debug(`.scripts not found in ${scriptsRc}`);
+function * getScriptsObject(cwd) {
+  const packageRoot = yield pkgDir(cwd);
+  if (packageRoot === null) {
+    error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
   }
+
+  const scriptsRcPath = path.join(packageRoot, '.scripts.js');
+
+  if (yield fs.exists(scriptsRcPath)) {
+    return yield readScriptsRc(scriptsRcPath);
+  }
+
+  debug(`.scripts not found in ${scriptsRcPath}.
+        Will try to read package.json scripts field.`);
 
   const scripts = yield pkgConf('scripts', {cwd: cwd});
   debug(`scripts pkg object => ${JSON.stringify(scripts)}`);
-  if (pkgConf.filepath(scripts) === null) {
-    error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
-  }
 
   return scripts;
 }
