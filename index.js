@@ -32,8 +32,7 @@ function buildScriptSource(scriptName, scripts) {
   return source;
 }
 
-function * getScriptsObject(scriptName, options) {
-  const cwd = options.cwd || process.cwd;
+function * getScriptsObject(cwd) {
   const root = yield pkgDir(cwd);
   if (root) {
     const scriptsRc = path.join(root, '.scripts.js');
@@ -62,10 +61,6 @@ function * injectPkgJsonContent(options) {
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 }
 
-function * getScriptSource(scriptName, options) {
-  const scripts = yield getScriptsObject(scriptName, options);
-  return buildScriptSource(scriptName, scripts);
-}
 
 function * runScripts(scriptName, options) {
   options.spawn = options.spawn || {};
@@ -74,8 +69,11 @@ function * runScripts(scriptName, options) {
   yield injectPkgJsonContent(options);
   options.spawn.cwd = options.cwd;
 
+  const scripts = yield getScriptsObject(options.cwd || process.cwd);
+  const scriptSource = buildScriptSource(scriptName, scripts);
+
   return spawn(
-    yield getScriptSource(scriptName, options),
+    scriptSource,
     options.spawn
   );
 }
