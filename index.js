@@ -18,28 +18,41 @@ function error(code, message) {
   throw err;
 }
 
-function buildScriptSource(scriptName, scripts) {
-  if (! scripts.hasOwnProperty(scriptName)) {
+function findScriptSources(scriptName, scripts) {
+  const object = scripts.object;
+  if (! object.hasOwnProperty(scriptName)) {
     error('ENOSCRIPT', `Script not found: ${scriptName}`);
   }
 
-  const pre = scripts['pre' + scriptName] || '';
-  const script = scripts[scriptName];
-  const post = scripts['post' + scriptName] || '';
+  const pre = object['pre' + scriptName] || '';
+  const script = object[scriptName];
+  const post = object['post' + scriptName] || '';
 
-  const foundScripts = [pre, script, post].filter(s => !!s);
-  const source = foundScripts.join('; ');
-  return source;
+  return [pre, script, post].filter(s => !!s);
+
 }
 
 function * readScriptsRc(scriptsRcPath) {
   debug(`.scripts.js found in ${scriptsRcPath}`);
   const scripts = yield babelifyRequire(scriptsRcPath);
   debug(`.scripts.js content => ${JSON.stringify(scripts.default)}`);
-  return scripts.default;
+  return {
+    object: scripts.default,
+    source: 'rc'
+  };
 }
 
-function * getScriptsObject(cwd) {
+function * readPackageJSON(cwd) {
+  const object = yield pkgConf('scripts', {cwd: cwd});
+  debug(`scripts pkg object => ${JSON.stringify(object)}`);
+
+  return {
+    object,
+    source: 'package'
+  };
+}
+
+function * readScriptsObject(cwd) {
   const packageRoot = yield pkgDir(cwd);
   if (packageRoot === null) {
     error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
@@ -51,34 +64,35 @@ function * getScriptsObject(cwd) {
     return yield readScriptsRc(scriptsRcPath);
   }
 
-  debug(`.scripts not found in ${scriptsRcPath}.
-        Will try to read package.json scripts field.`);
-
-  const scripts = yield pkgConf('scripts', {cwd: cwd});
-  debug(`scripts pkg object => ${JSON.stringify(scripts)}`);
-
-  return scripts;
+  return  yield readPackageJSON(cwd);
 }
-
-
-function * injectPkgJsonContent(options) {
-  const pkg = yield readPkgUp({cwd: options.cwd});
-  flatten(pkg.pkg, 'npm_package_', options.spawn.env);
-}
-
 
 function * runScripts(scriptName, options) {
   options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
-
-  yield injectPkgJsonContent(options);
   options.spawn.cwd = options.cwd;
 
-  const scripts = yield getScriptsObject(options.cwd || process.cwd);
-  const scriptSource = buildScriptSource(scriptName, scripts);
+  const pkg = yield readPkgUp({cwd: options.cwd});
+  const scripts = yield readScriptsObject(options.cwd || process.cwd);
+
+  let foundScripts = findScriptSources(scriptName, scripts);
+
+  if (scripts.source === 'rc') {
+    foundScripts = foundScripts.map(script =>
+      typeof script === 'function'
+      ? script(pkg.pkg)
+      : script
+    );
+    debug(`scripts commands after function erxecution => ${JSON.stringify(foundScripts)}`);
+
+  } else {
+    flatten(pkg.pkg, 'npm_package_', options.spawn.env);
+  }
+
+  const shellCommand = foundScripts.join('; ');
 
   return spawn(
-    scriptSource,
+    shellCommand,
     options.spawn
   );
 }

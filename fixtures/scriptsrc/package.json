@@ -1,4 +1,5 @@
 {
+  "name": "fixture",
   "engine": {
     "node":"4.0"
   },

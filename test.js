@@ -27,6 +27,12 @@ test('use .scripts if present', t => co(function * () {
 }).catch(err => t.end(err)));
 
 
+test('run function command in .scripts', t => co(function * () {
+  t.equal(yield check('scriptsrc', 'test2'), 'salve fixture\n');
+  t.end();
+}).catch(err => t.end(err)));
+
+
 test('run pre and post scripts if presents', t => co(function * () {
   t.equal(yield check('simple', 'check-prepost'), '1\n2\n3\n');
   t.end();
