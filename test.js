@@ -4,8 +4,8 @@ const co = require('co');
 
 const concat = require('stream-string');
 
-const check = co.wrap(function * check(dir, script) {
-  const result = yield run(script, {}, {
+const check = co.wrap(function * check(dir, script, args) {
+  const result = yield run(script, args || {}, {
     cwd: __dirname + `/fixtures/${dir}`,
     spawn: {
       stdio: [0, 'pipe', 2]
@@ -29,6 +29,12 @@ test('use .scripts if present', t => co(function * () {
 
 test('run function command in .scripts', t => co(function * () {
   t.equal(yield check('scriptsrc', 'test2'), 'salve fixture\n');
+  t.end();
+}).catch(err => t.end(err)));
+
+
+test('function command can recevie args', t => co(function * () {
+  t.equal(yield check('scriptsrc', 'test3', {anArg: 'aValue'}), 'salve aValue\n');
   t.end();
 }).catch(err => t.end(err)));
 

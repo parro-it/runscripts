@@ -67,10 +67,10 @@ function * readScriptsObject(cwd) {
   return  yield readPackageJSON(cwd);
 }
 
-function resolveFunction(foundScripts, pkg) {
+function resolveFunction(foundScripts, pkg, args) {
   const reolvedScripts = foundScripts.map(script =>
     typeof script === 'function'
-    ? script(pkg)
+    ? script(pkg, args || {})
     : script
   );
   debug(`scripts commands after function resolution => ${JSON.stringify(reolvedScripts)}`);
@@ -88,7 +88,7 @@ function * runScripts(scriptName, args, options) {
   const foundScripts = findScriptSources(scriptName, scripts);
 
   const resolvedScripts = scripts.source === 'rc'
-    ? resolveFunction(foundScripts, pkg.pkg)
+    ? resolveFunction(foundScripts, pkg.pkg, args)
     : foundScripts;
 
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
