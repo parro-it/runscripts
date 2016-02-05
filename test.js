@@ -5,7 +5,7 @@ const co = require('co');
 const concat = require('stream-string');
 
 const check = co.wrap(function * check(dir, script) {
-  const result = yield run(script, {
+  const result = yield run(script, {}, {
     cwd: __dirname + `/fixtures/${dir}`,
     spawn: {
       stdio: [0, 'pipe', 2]

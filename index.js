@@ -67,7 +67,17 @@ function * readScriptsObject(cwd) {
   return  yield readPackageJSON(cwd);
 }
 
-function * runScripts(scriptName, options) {
+function resolveFunction(foundScripts, pkg) {
+  const reolvedScripts = foundScripts.map(script =>
+    typeof script === 'function'
+    ? script(pkg)
+    : script
+  );
+  debug(`scripts commands after function resolution => ${JSON.stringify(reolvedScripts)}`);
+  return reolvedScripts;
+}
+
+function * runScripts(scriptName, args, options) {
   options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
   options.spawn.cwd = options.cwd;
@@ -75,21 +85,15 @@ function * runScripts(scriptName, options) {
   const pkg = yield readPkgUp({cwd: options.cwd});
   const scripts = yield readScriptsObject(options.cwd || process.cwd);
 
-  let foundScripts = findScriptSources(scriptName, scripts);
+  const foundScripts = findScriptSources(scriptName, scripts);
 
-  if (scripts.source === 'rc') {
-    foundScripts = foundScripts.map(script =>
-      typeof script === 'function'
-      ? script(pkg.pkg)
-      : script
-    );
-    debug(`scripts commands after function erxecution => ${JSON.stringify(foundScripts)}`);
+  const resolvedScripts = scripts.source === 'rc'
+    ? resolveFunction(foundScripts, pkg.pkg)
+    : foundScripts;
 
-  } else {
-    flatten(pkg.pkg, 'npm_package_', options.spawn.env);
-  }
+  flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 
-  const shellCommand = foundScripts.join('; ');
+  const shellCommand = resolvedScripts.join('; ');
 
   return spawn(
     shellCommand,
