@@ -8,7 +8,7 @@ const fs = require('fs-promise');
 const spawn = require('spawn-shell');
 const readPkgUp = require('read-pkg-up');
 const flatten = require('./modules/flatten-obj');
-const pkgDir = require('pkg-dir');
+const pkgUp = require('pkg-up');
 const babelifyRequire = require('babelify-require');
 
 
@@ -68,27 +68,36 @@ function * readPackageJSON(cwd) {
 }
 
 
-function * readScriptsObject(cwd) {
-  cwd = cwd || process.cwd();
+function * _readScriptsObject(cwd) {
   debug(`readScriptsObject cwd=${cwd}`);
 
-  try {
-    const packageRoot = yield pkgDir(cwd);
-    if (packageRoot === null) {
-      error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
-    }
-
-    const scriptsRcPath = path.join(packageRoot, '.scripts.js');
-
-    if (yield fs.exists(scriptsRcPath)) {
-      return yield readScriptsRc(scriptsRcPath);
-    }
-
-    return yield readPackageJSON(cwd);
-
-  } catch (err) {
-    throwError(err);
+  const packageRootFile = yield pkgUp(cwd);
+  if (packageRootFile === null) {
+    error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
   }
+  const packageRoot = path.dirname(packageRootFile);
+  debug(`packageRoot ${packageRoot}`);
+  const scriptsRcPath = path.join(packageRoot, '.scripts.js');
+
+  if (yield fs.exists(scriptsRcPath)) {
+    return yield readScriptsRc(scriptsRcPath);
+  }
+
+  return yield readPackageJSON(cwd);
+}
+
+function getCwdOption(_cwd) {
+  return path.resolve(
+    process.cwd(),
+    _cwd || '.'
+  );
+}
+
+function readScriptsObject(_cwd) {
+  debug('readScriptsObject');
+  return co.wrap(_readScriptsObject)(
+    getCwdOption(_cwd)
+  ).catch(throwError);
 }
 
 
@@ -102,38 +111,45 @@ function resolveFunction(foundScripts, pkg, args) {
   return reolvedScripts;
 }
 
-function * runScripts(scriptName, args, options) {
-  options = options || {};
+function readOptions(_options) {
+  const options = _options || {};
   options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
-  options.cwd = options.cwd || process.cwd();
+  options.cwd = getCwdOption(options.cwd);
   options.spawn.cwd = options.cwd;
-  try {
-    const pkg = yield readPkgUp({cwd: options.cwd});
-    const scripts = yield readScriptsObject(options.cwd);
-
-    const foundScripts = findScriptSources(scriptName, scripts);
-
-    const resolvedScripts = scripts.source === 'rc'
-      ? resolveFunction(foundScripts, pkg.pkg, args)
-      : foundScripts;
-
-    flatten(pkg.pkg, 'npm_package_', options.spawn.env);
-
-    const shellCommand = resolvedScripts.join('; ');
-
-    return spawn(
-      shellCommand,
-      options.spawn
-
-    ).exitPromise;
-  } catch (err) {
-    throwError(err);
-  }
-
+  return options;
 }
 
-module.exports = co.wrap(runScripts);
-module.exports.readScriptsObject = co.wrap(readScriptsObject);
+function * _runScripts(scriptName, args, options) {
+  const pkg = yield readPkgUp({cwd: options.cwd});
+  const scripts = yield _readScriptsObject(options.cwd);
+
+  const foundScripts = findScriptSources(scriptName, scripts);
+
+  const resolvedScripts = scripts.source === 'rc'
+    ? resolveFunction(foundScripts, pkg.pkg, args)
+    : foundScripts;
+
+  flatten(pkg.pkg, 'npm_package_', options.spawn.env);
+
+  const shellCommand = resolvedScripts.join('; ');
+
+  return spawn(
+    shellCommand,
+    options.spawn
+
+  );
+}
+
+function runScripts(scriptName, args, _options) {
+  return co(_runScripts(
+      scriptName,
+      args,
+      readOptions(_options)
+  )).catch(throwError);
+}
+
+runScripts.readScriptsObject = readScriptsObject;
+module.exports = runScripts;
 
 

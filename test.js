@@ -11,7 +11,6 @@ const check = co.wrap(function * check(dir, script, args) {
       stdio: [0, 'pipe', 2]
     }
   });
-
   return concat(result.stdout);
 });
 
@@ -67,4 +66,17 @@ test('throws when pkg.json not found', t => co(function * () {
       t.end();
     });
 
+}));
+
+
+test('readScriptsObject - return package json scripts', t => co(function * () {
+  const scripts = yield run.readScriptsObject('fixtures/simple');
+  t.deepEqual(scripts.object, {
+    'test-pkg-vars': 'echo ${npm_package_engine_node}',
+    'test1': 'echo ciao',
+    'check-prepost': 'echo 2',
+    'precheck-prepost': 'echo 1',
+    'postcheck-prepost': 'echo 3'
+  });
+  t.end();
 }));
