@@ -18,6 +18,21 @@ function error(code, message) {
   throw err;
 }
 
+function throwError(err) {
+  if (err.name === 'JSONError') {
+    error(
+      'EINVALIDPKG',
+      'Your package.json is not parsable:\n\n' +
+      String(err.stack).split(':').slice(1).join(':')
+        .split('\n')
+        .splice(0, 3)
+        .join('\n')
+    );
+  }
+  throw err;
+}
+
+
 function findScriptSources(scriptName, scripts) {
   const object = scripts.object;
   if (! object.hasOwnProperty(scriptName)) {
@@ -52,20 +67,30 @@ function * readPackageJSON(cwd) {
   };
 }
 
+
 function * readScriptsObject(cwd) {
-  const packageRoot = yield pkgDir(cwd);
-  if (packageRoot === null) {
-    error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
+  cwd = cwd || process.cwd();
+  debug(`readScriptsObject cwd=${cwd}`);
+
+  try {
+    const packageRoot = yield pkgDir(cwd);
+    if (packageRoot === null) {
+      error('ENOCONFIG', `.scripts file or package.json not found from: ${cwd}`);
+    }
+
+    const scriptsRcPath = path.join(packageRoot, '.scripts.js');
+
+    if (yield fs.exists(scriptsRcPath)) {
+      return yield readScriptsRc(scriptsRcPath);
+    }
+
+    return yield readPackageJSON(cwd);
+
+  } catch (err) {
+    throwError(err);
   }
-
-  const scriptsRcPath = path.join(packageRoot, '.scripts.js');
-
-  if (yield fs.exists(scriptsRcPath)) {
-    return yield readScriptsRc(scriptsRcPath);
-  }
-
-  return  yield readPackageJSON(cwd);
 }
+
 
 function resolveFunction(foundScripts, pkg, args) {
   const reolvedScripts = foundScripts.map(script =>
@@ -78,27 +103,37 @@ function resolveFunction(foundScripts, pkg, args) {
 }
 
 function * runScripts(scriptName, args, options) {
+  options = options || {};
   options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
+  options.cwd = options.cwd || process.cwd();
   options.spawn.cwd = options.cwd;
+  try {
+    const pkg = yield readPkgUp({cwd: options.cwd});
+    const scripts = yield readScriptsObject(options.cwd);
 
-  const pkg = yield readPkgUp({cwd: options.cwd});
-  const scripts = yield readScriptsObject(options.cwd || process.cwd);
+    const foundScripts = findScriptSources(scriptName, scripts);
 
-  const foundScripts = findScriptSources(scriptName, scripts);
+    const resolvedScripts = scripts.source === 'rc'
+      ? resolveFunction(foundScripts, pkg.pkg, args)
+      : foundScripts;
 
-  const resolvedScripts = scripts.source === 'rc'
-    ? resolveFunction(foundScripts, pkg.pkg, args)
-    : foundScripts;
+    flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 
-  flatten(pkg.pkg, 'npm_package_', options.spawn.env);
+    const shellCommand = resolvedScripts.join('; ');
 
-  const shellCommand = resolvedScripts.join('; ');
+    return spawn(
+      shellCommand,
+      options.spawn
 
-  return spawn(
-    shellCommand,
-    options.spawn
-  );
+    ).exitPromise;
+  } catch (err) {
+    throwError(err);
+  }
+
 }
 
 module.exports = co.wrap(runScripts);
+module.exports.readScriptsObject = co.wrap(readScriptsObject);
+
+
