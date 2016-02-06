@@ -37,6 +37,7 @@
     "debug": "^2.2.0",
     "flatkeys": "^0.3.2",
     "fs-promise": "^0.4.1",
+    "map-obj": "^1.0.1",
     "pkg-conf": "^1.1.1",
     "pkg-dir": "^1.0.0",
     "pkg-up": "^1.0.0",
