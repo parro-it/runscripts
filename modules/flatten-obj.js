@@ -1,7 +1,7 @@
 'use strict';
 
 function flattenJSON(json, prefix, env) {
-  if (typeof json !== 'object') {
+  if (typeof json !== 'object' || json === null) {
     return env;
   }
 

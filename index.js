@@ -2,6 +2,7 @@
 
 const pkgConf = require('pkg-conf');
 const co = require('co');
+const abbrev = require('abbrev');
 const debug = require('debug')('runscripts');
 const path = require('path');
 const fs = require('fs-promise');
@@ -33,9 +34,10 @@ function throwError(err) {
 }
 
 
-function findScriptSources(scriptName, scripts) {
+function findScriptSources(_scriptName, scripts) {
   const object = scripts.object;
-  if (! object.hasOwnProperty(scriptName)) {
+  const scriptName = abbrev(Object.keys(object))[_scriptName];
+  if (!scriptName) {
     error('ENOSCRIPT', `Script not found: ${scriptName}`);
   }
 
@@ -129,7 +131,6 @@ function * _runScripts(scriptName, args, options) {
   const resolvedScripts = scripts.source === 'rc'
     ? resolveFunction(foundScripts, pkg.pkg, args)
     : foundScripts;
-
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 
   const shellCommand = resolvedScripts.join('; ');
