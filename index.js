@@ -38,7 +38,7 @@ function findScriptSources(_scriptName, scripts) {
   const object = scripts.object;
   const scriptName = abbrev(Object.keys(object))[_scriptName];
   if (!scriptName) {
-    error('ENOSCRIPT', `Script not found: ${scriptName}`);
+    error('ENOSCRIPT', `Script not found: ${_scriptName}`);
   }
 
   const pre = object['pre' + scriptName] || '';
