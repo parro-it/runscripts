@@ -1,7 +1,7 @@
 {
   "name": "runscripts",
   "version": "0.4.0",
-  "description": "",
+  "description": "npm scripts on steroids",
   "repository": "parro-it/runscripts",
   "license": "MIT",
   "author": "parro-it",
@@ -42,6 +42,6 @@
     "pkg-dir": "^1.0.0",
     "pkg-up": "^1.0.0",
     "read-pkg-up": "^1.0.1",
-    "spawn-shell": "^1.1.1"
+    "spawn-shell": "^1.1.2"
   }
 }
