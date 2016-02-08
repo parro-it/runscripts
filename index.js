@@ -142,6 +142,13 @@ function * _runScripts(scriptName, args, options) {
   );
 }
 
+function * _scriptSource(scriptName, options) {
+  const scripts = yield _readScriptsObject(options.cwd);
+
+  const foundScripts = findScriptSources(scriptName, scripts);
+  return foundScripts.join('\n');
+}
+
 function runScripts(scriptName, args, _options) {
   return co(_runScripts(
       scriptName,
@@ -150,7 +157,15 @@ function runScripts(scriptName, args, _options) {
   )).catch(throwError);
 }
 
+function scriptSource(scriptName, _options) {
+  return co(_scriptSource(
+      scriptName,
+      readOptions(_options)
+  )).catch(throwError);
+}
+
 runScripts.readScriptsObject = readScriptsObject;
+runScripts.scriptSource = scriptSource;
 module.exports = runScripts;
 
 
