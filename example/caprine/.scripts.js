@@ -3,6 +3,8 @@ export default {
   start: 'electron .',
 
   buildAll(pkg) {
+    // TODO: handle a function that return an array
+    // of string
     return [
       this.build(pkg, {platform:'linux', arch:'x64'}),
       this.build(pkg, {platform:'linux', arch:'ia32'}),
