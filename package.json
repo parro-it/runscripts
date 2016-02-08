@@ -42,6 +42,6 @@
     "pkg-dir": "^1.0.0",
     "pkg-up": "^1.0.0",
     "read-pkg-up": "^1.0.1",
-    "spawn-shell": "^1.0.1"
+    "spawn-shell": "^1.1.1"
   }
 }

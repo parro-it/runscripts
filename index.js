@@ -117,6 +117,8 @@ function readOptions(_options) {
   const options = _options || {};
   options.spawn = options.spawn || {};
   options.spawn.env = (options.spawn.env || process.env);
+  options.spawn.shell = 'sh';
+
   options.cwd = getCwdOption(options.cwd);
   options.spawn.cwd = options.cwd;
   return options;
@@ -134,11 +136,9 @@ function * _runScripts(scriptName, args, options) {
   flatten(pkg.pkg, 'npm_package_', options.spawn.env);
 
   const shellCommand = resolvedScripts.join('; ');
-
   return spawn(
     shellCommand,
     options.spawn
-
   );
 }
 
