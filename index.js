@@ -2,13 +2,14 @@
 
 const pkgConf = require('pkg-conf');
 const co = require('co');
+const map = require('map-obj');
 const abbrev = require('abbrev');
 const debug = require('debug')('runscripts');
 const path = require('path');
 const fs = require('fs-promise');
 const spawn = require('spawn-shell');
 const readPkgUp = require('read-pkg-up');
-const flatten = require('./modules/flatten-obj');
+const flatten = require('flatten-obj')({separator: '_'});
 const pkgUp = require('pkg-up');
 const babelifyRequire = require('babelify-require');
 
@@ -133,7 +134,11 @@ function * _runScripts(scriptName, args, options) {
   const resolvedScripts = scripts.source === 'rc'
     ? resolveFunction(foundScripts, pkg.pkg, args)
     : foundScripts;
-  flatten(pkg.pkg, 'npm_package_', options.spawn.env);
+
+  const flattenedPkg = map(flatten(pkg.pkg), (key, value) => ['npm_package_' + key, value]);
+
+  Object.assign(options.spawn.env, flattenedPkg);
+
 
   const shellCommand = resolvedScripts.join('; ');
   return spawn(

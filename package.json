@@ -36,6 +36,7 @@
     "co": "^4.6.0",
     "debug": "^2.2.0",
     "flatkeys": "^0.3.2",
+    "flatten-obj": "^3.0.0",
     "fs-promise": "^0.4.1",
     "map-obj": "^1.0.1",
     "pkg-conf": "^1.1.1",
