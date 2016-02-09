@@ -1,3 +1,4 @@
+'use strict';
 const test = require('tape');
 const run = require('./');
 const co = require('co');
